@@ -21,6 +21,7 @@ BATCH_SIZE = 32
 LEARNING_RATE = 0.001
 NUM_EPOCHS = 3
 TEST_SIZE = 0.2  # Доля данных для валидации
+MIN_SAMPLES = 500 # Минимальное количество примеров на класс
 RANDOM_SEED = 42
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 MODEL_SAVE_PATH = f'{dataname}.pth'
@@ -210,7 +211,7 @@ def main():
     print(f"Используется устройство: {DEVICE}")
     
     # Загрузка данных
-    texts, labels = load_data(CSV_FILE)
+    texts, labels = load_data(CSV_FILE, min_samples_per_class=MIN_SAMPLES)
     
     # Преобразование меток в числовые значения
     unique_labels = sorted(list(set(labels)))
@@ -294,7 +295,7 @@ def main():
     print(f"Обучение завершено!")
     print(f"Лучшая точность на валидации: {best_val_acc:.2f}%")
     print(f"Модель сохранена в: {MODEL_SAVE_PATH}")
-    print(f"Словарь сохранён в: {VOCAB_SAVE_PATH}")
+    #print(f"Словарь сохранён в: {VOCAB_SAVE_PATH}")
     print("="*50)
 
 
