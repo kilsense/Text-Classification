@@ -1,0 +1,2 @@
+python char_classifier_trainer.py
+pause
