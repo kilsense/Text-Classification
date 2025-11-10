@@ -1,3 +1,5 @@
+[Русский](https://github.com/kilsense/Text-Classification/blob/7b821631ea7b598579efacdb8587ab23753875b4/main/LSTM/readme.md)
+
 This folder contains my first classification program that I made with a very serious face.
 
 # char_classifier_trainer.py
