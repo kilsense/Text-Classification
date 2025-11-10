@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактор датасетов</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div id="app" class="p-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <h1 class="text-3xl font-bold text-gray-800">Редактор датасетов</h1>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="filename" value="dataset" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Имя файла">
+                        <span class="text-gray-600">.csv</span>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-indigo-50 rounded-lg p-4">
+                        <div class="text-sm text-indigo-600 font-medium">Всего записей</div>
+                        <div class="text-2xl font-bold text-indigo-900" id="totalEntries">0</div>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-4">
+                        <div class="text-sm text-purple-600 font-medium">Классов</div>
+                        <div class="text-2xl font-bold text-purple-900" id="totalClasses">0</div>
+                    </div>
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <div class="text-sm text-blue-600 font-medium">Отфильтровано</div>
+                        <div class="text-2xl font-bold text-blue-900" id="filteredCount">0</div>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <div class="text-sm text-green-600 font-medium">Мин. примеров</div>
+                        <div class="text-2xl font-bold text-green-900" id="minExamples">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Entry Form -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Добавить запись</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input type="text" id="labelInput" placeholder="Метка класса" class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    <input type="text" id="textInput" placeholder="Текст для классификации" class="md:col-span-2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    <button onclick="addEntry()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Добавить
+                    </button>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <div class="flex flex-wrap gap-4 items-center">
+                    <div class="flex-1 min-w-64">
+                        <div class="relative">
+                            <svg class="absolute left-3 top-3 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            <input type="text" id="searchInput" placeholder="Поиск по тексту или метке..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    
+                    <select id="labelFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <option value="all">Все классы</option>
+                    </select>
+
+                    <label class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                        Импорт
+                        <input type="file" id="importFile" accept=".csv,.tsv,.txt" style="display: none;">
+                    </label>
+
+                    <button onclick="exportToTSV()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Экспорт TSV
+                    </button>
+
+                    <button onclick="clearAll()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                        Очистить всё
+                    </button>
+                </div>
+            </div>
+
+            <!-- Class Distribution -->
+            <div id="distributionSection" class="bg-white rounded-lg shadow-lg p-6 mb-6" style="display: none;">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Распределение классов</h3>
+                <div id="distributionContent" class="space-y-2"></div>
+            </div>
+
+            <!-- Entries List -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Записи (<span id="entriesCount">0</span>)</h3>
+                <div id="entriesList" class="space-y-2 max-h-96 overflow-y-auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let entries = [];
+        let filteredEntries = [];
+
+        // Load from localStorage
+        function loadFromStorage() {
+            const stored = localStorage.getItem('datasetEntries');
+            if (stored) {
+                entries = JSON.parse(stored);
+                updateUI();
+            }
+        }
+
+        // Save to localStorage
+        function saveToStorage() {
+            localStorage.setItem('datasetEntries', JSON.stringify(entries));
+        }
+
+        // Add entry
+        function addEntry() {
+            const label = document.getElementById('labelInput').value.trim();
+            const text = document.getElementById('textInput').value.trim();
+
+            if (!label || !text) {
+                alert('Пожалуйста, заполните метку и текст');
+                return;
+            }
+
+            entries.push({
+                id: Date.now(),
+                label: label,
+                text: text,
+                timestamp: new Date().toISOString()
+            });
+
+            document.getElementById('labelInput').value = '';
+            document.getElementById('textInput').value = '';
+            
+            saveToStorage();
+            updateUI();
+        }
+
+        // Delete entry
+        function deleteEntry(id) {
+            entries = entries.filter(e => e.id !== id);
+            saveToStorage();
+            updateUI();
+        }
+
+        // Export to TSV
+        function exportToTSV() {
+            if (entries.length === 0) {
+                alert('Нет данных для экспорта');
+                return;
+            }
+
+            const filename = document.getElementById('filename').value || 'dataset';
+            const tsvContent = entries.map(e => `${e.label}\t${e.text}`).join('\n');
+            
+            const blob = new Blob([tsvContent], { type: 'text/tab-separated-values;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${filename}.csv`;
+            link.click();
+        }
+
+        // Clear all data
+        function clearAll() {
+            if (entries.length === 0) {
+                alert('Данные уже пусты');
+                return;
+            }
+
+            if (confirm(`Вы уверены, что хотите удалить все ${entries.length} записей? Это действие нельзя отменить!`)) {
+                entries = [];
+                filteredEntries = [];
+                saveToStorage();
+                updateUI();
+                alert('Все данные удалены');
+            }
+        }
+
+        // Import from file
+        document.getElementById('importFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const content = event.target.result;
+                const lines = content.split('\n').filter(line => line.trim());
+                
+                let imported = 0;
+                lines.forEach(line => {
+                    const parts = line.split('\t');
+                    if (parts.length >= 2) {
+                        const label = parts[0].trim();
+                        const text = parts.slice(1).join('\t').trim();
+                        
+                        if (label && text && label !== 'nan' && text !== 'nan') {
+                            entries.push({
+                                id: Date.now() + Math.random(),
+                                label: label,
+                                text: text,
+                                timestamp: new Date().toISOString()
+                            });
+                            imported++;
+                        }
+                    }
+                });
+
+                alert(`Импортировано ${imported} записей`);
+                saveToStorage();
+                updateUI();
+            };
+
+            reader.readAsText(file, 'utf-8');
+            e.target.value = '';
+        });
+
+        // Filter entries
+        function filterEntries() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const labelFilter = document.getElementById('labelFilter').value;
+
+            filteredEntries = entries.filter(entry => {
+                const matchesSearch = entry.text.toLowerCase().includes(search) ||
+                                    entry.label.toLowerCase().includes(search);
+                const matchesLabel = labelFilter === 'all' || entry.label === labelFilter;
+                return matchesSearch && matchesLabel;
+            });
+
+            renderEntries();
+        }
+
+        // Update UI
+        function updateUI() {
+            filterEntries();
+            updateStats();
+            updateLabelFilter();
+            updateDistribution();
+        }
+
+        // Update stats
+        function updateStats() {
+            const stats = {};
+            entries.forEach(e => {
+                stats[e.label] = (stats[e.label] || 0) + 1;
+            });
+
+            document.getElementById('totalEntries').textContent = entries.length;
+            document.getElementById('totalClasses').textContent = Object.keys(stats).length;
+            document.getElementById('filteredCount').textContent = filteredEntries.length;
+            document.getElementById('minExamples').textContent = 
+                Object.keys(stats).length > 0 ? Math.min(...Object.values(stats)) : 0;
+        }
+
+        // Update label filter dropdown
+        function updateLabelFilter() {
+            const select = document.getElementById('labelFilter');
+            const currentValue = select.value;
+            const labels = [...new Set(entries.map(e => e.label))].sort();
+            
+            const stats = {};
+            entries.forEach(e => {
+                stats[e.label] = (stats[e.label] || 0) + 1;
+            });
+
+            select.innerHTML = '<option value="all">Все классы</option>';
+            labels.forEach(label => {
+                const option = document.createElement('option');
+                option.value = label;
+                option.textContent = `${label} (${stats[label]})`;
+                select.appendChild(option);
+            });
+
+            select.value = currentValue;
+        }
+
+        // Update distribution chart
+        function updateDistribution() {
+            const stats = {};
+            entries.forEach(e => {
+                stats[e.label] = (stats[e.label] || 0) + 1;
+            });
+
+            const section = document.getElementById('distributionSection');
+            const content = document.getElementById('distributionContent');
+
+            if (Object.keys(stats).length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            content.innerHTML = '';
+
+            const labels = Object.keys(stats).sort();
+            labels.forEach(label => {
+                const count = stats[label];
+                const percentage = (count / entries.length * 100).toFixed(1);
+
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-3';
+                div.innerHTML = `
+                    <div class="w-32 text-sm font-medium text-gray-700 truncate">${label}</div>
+                    <div class="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden">
+                        <div class="bg-indigo-600 h-full flex items-center justify-end pr-2" style="width: ${percentage}%">
+                            <span class="text-xs text-white font-medium">${count}</span>
+                        </div>
+                    </div>
+                    <div class="w-16 text-sm text-gray-600 text-right">${percentage}%</div>
+                `;
+                content.appendChild(div);
+            });
+        }
+
+        // Render entries
+        function renderEntries() {
+            const list = document.getElementById('entriesList');
+            document.getElementById('entriesCount').textContent = filteredEntries.length;
+
+            if (filteredEntries.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-12 text-gray-500">
+                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p class="text-lg">Нет записей</p>
+                        <p class="text-sm">Добавьте данные или импортируйте файл</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = filteredEntries.map(entry => `
+                <div class="flex items-start gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div class="flex-shrink-0">
+                        <span class="inline-block px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium">
+                            ${entry.label}
+                        </span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-gray-800 break-words">${entry.text}</p>
+                        <p class="text-xs text-gray-400 mt-1">
+                            ${new Date(entry.timestamp).toLocaleString('ru-RU')}
+                        </p>
+                    </div>
+                    <button onclick="deleteEntry(${entry.id})" class="flex-shrink-0 text-red-600 hover:text-red-800 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', filterEntries);
+        document.getElementById('labelFilter').addEventListener('change', filterEntries);
+        document.getElementById('labelInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') document.getElementById('textInput').focus();
+        });
+        document.getElementById('textInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') addEntry();
+        });
+
+        // Initialize
+        loadFromStorage();
+    </script>
+</body>
+</html>
