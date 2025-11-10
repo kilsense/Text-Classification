@@ -1,4 +1,4 @@
-[English](https://github.com/kilsense/Text-Classification/blob/4c00be0fff599e0cb705bf55b0bfc4def6e79010/main/LSTM/readmeEN.md)
+[English](https://github.com/kilsense/Text-Classification/blob/main/main/LSTM/readmeEN.md)
 
 В этой папке лежит моя первая программа классификации, которую я делал с очень серьёзным лицом.
 
